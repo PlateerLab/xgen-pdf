@@ -1,7 +1,7 @@
 name: Release wheel
 
 # GitHub Release 자산으로 wheel 을 낸다. 소비자는 pyproject 에서 URL 직접참조로 쓴다.
-# (PyPI 배포는 publish.yml — Trusted Publisher 가 등록되면 deploy 브랜치 push 로 발동.)
+# PyPI 에는 올리지 않는다 (배포 경로는 GitHub Release 하나).
 on:
   push:
     tags: ["v*"]

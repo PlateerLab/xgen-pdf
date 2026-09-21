@@ -71,6 +71,19 @@ with permissively licensed parts only:
 * Redaction of text encoded with a predefined CMap we do not know splits
   the whole text run instead of individual glyphs (never less than asked).
 
+## Installation
+
+xgen-pdf is distributed as a wheel on GitHub Releases, not on PyPI. Consumers
+pin the release URL directly (PEP 508 direct reference):
+
+```toml
+"xgen-pdf @ https://github.com/PlateerLab/xgen-pdf/releases/download/v0.1.1/xgen_pdf-0.1.1-py3-none-any.whl",
+```
+
+A package that requires `xgen-pdf` only by name (for example xgen-doc2chunk on
+PyPI) resolves against that pinned URL with both pip and uv; XGEN services
+install with `pip install .` from their pyproject, so nothing else is needed.
+
 ## Development
 
 ```bash
