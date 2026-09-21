@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xgen-pdf"
-version = "0.1.0"
+version = "0.1.1"
 description = "PDF text layout, tables, drawings, rendering and redaction engine on pdfium, with a fitz-shaped API"
 readme = "README.md"
 license = "Apache-2.0"

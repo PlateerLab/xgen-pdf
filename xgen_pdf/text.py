@@ -58,8 +58,9 @@ TEXTFLAGS_BLOCKS = TEXTFLAGS_DICT
 # Layout thresholds, all relative to the current font size.
 BASELINE_TOLERANCE = 0.5  # baseline shift that still counts as the same line
 BACKWARD_TOLERANCE = 0.5  # how far a glyph may start before the previous advance end
-SPACE_GAP = 0.1  # gap that gets an implicit space
+SPACE_GAP = 0.12  # gap (after letter-spacing removal) that gets an implicit space
 LINE_GAP = 0.8  # gap that ends the line instead
+SPACE_LINE_GAP = 2.5  # a gap next to a real space character is word spacing unless this wide
 PARAGRAPH_PITCH = 1.5  # baseline distance (in font sizes) that ends a block
 INDENT_SHIFT = 0.2  # a line starting further right than the previous one ends a block
 SUPERSCRIPT_RAISE = 0.15
@@ -205,9 +206,59 @@ def _synthetic_space(prev: RawChar, nxt: RawChar) -> RawChar:
     )
 
 
+def _letter_spacing(chars: list[RawChar]) -> dict[int, float]:
+    """Estimate the character spacing (Tc) of every text object.
+
+    PDF producers apply tracking as extra advance after each glyph, so the
+    visible gap between neighbouring glyphs is Tc plus kerning.  The median of
+    the small gaps inside an object recovers Tc (it can be negative for tight
+    tracking); layout decisions use gaps with that spacing removed, the way a
+    renderer's pen position would see them.
+    """
+    gaps: dict[int, list[float]] = {}
+    font_key: dict[int, tuple[str, float]] = {}
+    prev: RawChar | None = None
+    for ch in chars:
+        if ch.generated or ch.char in "\r\n":
+            continue  # pdfium's own inserted spaces carry no geometry
+        font_key.setdefault(ch.obj, (ch.font, round(ch.size, 1)))
+        if ch.char == " ":
+            prev = None  # a real space: the next pair is not adjacent glyphs
+            continue
+        if prev is not None and prev.obj == ch.obj and _same_dir(prev.dir, ch.dir):
+            size = max(ch.size, prev.size, 1.0)
+            start, _end, base = _along(ch, ch.dir)
+            _pstart, pend, pbase = _along(prev, ch.dir)
+            if abs(base - pbase) <= BASELINE_TOLERANCE * size:
+                gap = (start - pend) / size
+                if -0.5 < gap < 0.6:
+                    gaps.setdefault(ch.obj, []).append(gap)
+        prev = ch
+    spacing: dict[int, float] = {}
+    by_font: dict[tuple[str, float], list[float]] = {}
+    for obj, values in gaps.items():
+        if len(values) < 2:
+            continue
+        values.sort()
+        median = max(-0.3, min(0.3, values[len(values) // 2]))
+        spacing[obj] = median
+        by_font.setdefault(font_key[obj], []).append(median)
+    # Objects too short to measure (a single glyph, one word) inherit the
+    # spacing of the same font and size on the page.
+    fallback: dict[tuple[str, float], float] = {}
+    for key, values in by_font.items():
+        values.sort()
+        fallback[key] = values[len(values) // 2]
+    for obj, key in font_key.items():
+        if obj not in spacing and key in fallback:
+            spacing[obj] = fallback[key]
+    return spacing
+
+
 def layout_chars(chars: list[RawChar], obj_seq: dict[int, int] | None = None) -> list[Block]:
     """Group characters into blocks/lines/spans following content order."""
     obj_seq = obj_seq or {}
+    tracking = _letter_spacing(chars)
     blocks: list[Block] = []
     block: Block | None = None
     line: Line | None = None
@@ -254,7 +305,8 @@ def layout_chars(chars: list[RawChar], obj_seq: dict[int, int] | None = None) ->
                 start, _end, base = _along(ch, line.dir)
                 pstart, pend, _pbase = _along(prev, line.dir)
                 baseline_shift = abs(base - line.baseline)
-                gap = start - pend
+                gap = start - pend - tracking.get(prev.obj, 0.0) * ref
+                at_space = ch.char == " " or prev.char == " "
                 # Expanded ligatures share one glyph box, so a glyph that starts
                 # before the previous one *ended* is only a line break when it
                 # also starts before the previous one *started*.
@@ -263,9 +315,9 @@ def layout_chars(chars: list[RawChar], obj_seq: dict[int, int] | None = None) ->
                     new_line = True
                 elif backward:
                     new_line = True
-                elif gap > LINE_GAP * ref:
+                elif gap > (SPACE_LINE_GAP if at_space else LINE_GAP) * ref:
                     new_line = True
-                elif gap > SPACE_GAP * ref and ch.char != " " and prev.char != " ":
+                elif gap > SPACE_GAP * ref and not at_space:
                     add_space = True
                 if new_line:
                     # Is the new line the next line of the same paragraph?
