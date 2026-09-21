@@ -1,0 +1,36 @@
+name: Release wheel
+
+# GitHub Release 자산으로 wheel 을 낸다. 소비자는 pyproject 에서 URL 직접참조로 쓴다.
+# (PyPI 배포는 publish.yml — Trusted Publisher 가 등록되면 deploy 브랜치 push 로 발동.)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tag must match the pyproject version
+        run: |
+          V=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "v$V" != "${GITHUB_REF_NAME}" ]; then
+            echo "tag ${GITHUB_REF_NAME} != pyproject v$V"; exit 1
+          fi
+      - run: pip install build
+      - run: python -m build
+      - name: Installed wheel imports
+        run: |
+          pip install dist/*.whl
+          python -c "import xgen_pdf; print('xgen_pdf', xgen_pdf.__version__)"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

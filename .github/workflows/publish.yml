@@ -1,0 +1,27 @@
+name: Publish to PyPI
+
+# xgen-doc2chunk 는 PyPI 에 있으므로 그 의존인 xgen-pdf 도 PyPI 에서 풀려야 한다.
+# PyPI 에 Trusted Publisher(owner PlateerLab / repo xgen-pdf / workflow publish.yml
+# / environment 없음)를 등록하면, deploy 브랜치에 pyproject.toml 변경이 push 될 때
+# 자동으로 게시된다. 등록 전에는 이 워크플로는 실패한다(의도된 동작).
+on:
+  push:
+    branches: [deploy]
+    paths: ["pyproject.toml"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

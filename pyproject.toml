@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xgen-pdf"
+version = "0.1.0"
+description = "PDF text layout, tables, drawings, rendering and redaction engine on pdfium, with a fitz-shaped API"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+authors = [{ name = "PlateerLab" }]
+keywords = ["pdf", "pdfium", "text-extraction", "tables", "redaction", "rendering"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Text Processing",
+]
+# The only third-party runtime code: pdfium (BSD-3-Clause / Apache-2.0) via
+# pypdfium2 (Apache-2.0 / BSD-3-Clause) and Pillow (MIT-CMU).  No copyleft.
+dependencies = [
+    "pypdfium2>=4.30",
+    "pillow>=9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "pandas>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/PlateerLab/xgen-pdf"
+Repository = "https://github.com/PlateerLab/xgen-pdf"
+
+[tool.hatch.build.targets.wheel]
+packages = ["xgen_pdf"]
+
+[tool.hatch.build.targets.sdist]
+include = ["xgen_pdf/", "tests/", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+force-exclude = true
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
