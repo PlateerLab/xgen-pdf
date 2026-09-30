@@ -77,7 +77,7 @@ xgen-pdf is distributed as a wheel on GitHub Releases, not on PyPI. Consumers
 pin the release URL directly (PEP 508 direct reference):
 
 ```toml
-"xgen-pdf @ https://github.com/PlateerLab/xgen-pdf/releases/download/v0.1.1/xgen_pdf-0.1.1-py3-none-any.whl",
+"xgen-pdf @ https://github.com/PlateerLab/xgen-pdf/releases/download/v0.1.2/xgen_pdf-0.1.2-py3-none-any.whl",
 ```
 
 A package that requires `xgen-pdf` only by name (for example xgen-doc2chunk on
