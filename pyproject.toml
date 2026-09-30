@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xgen-pdf"
-version = "0.1.1"
+version = "0.1.2"
 description = "PDF text layout, tables, drawings, rendering and redaction engine on pdfium, with a fitz-shaped API"
 readme = "README.md"
 license = "Apache-2.0"
@@ -24,8 +24,8 @@ classifiers = [
 # The only third-party runtime code: pdfium (BSD-3-Clause / Apache-2.0) via
 # pypdfium2 (Apache-2.0 / BSD-3-Clause) and Pillow (MIT-CMU).  No copyleft.
 dependencies = [
-    "pypdfium2>=4.30",
-    "pillow>=9.0",
+    "pypdfium2==5.13.0",
+    "pillow==12.3.0",
 ]
 
 [project.optional-dependencies]
