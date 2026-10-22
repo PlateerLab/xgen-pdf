@@ -77,7 +77,7 @@ xgen-pdf is distributed as a wheel on GitHub Releases, not on PyPI. Consumers
 pin the release URL directly (PEP 508 direct reference):
 
 ```toml
-"xgen-pdf @ https://github.com/PlateerLab/xgen-pdf/releases/download/v0.1.2/xgen_pdf-0.1.2-py3-none-any.whl",
+"xgen-pdf @ https://github.com/PlateerLab/xgen-pdf/releases/download/v0.1.3/xgen_pdf-0.1.3-py3-none-any.whl",
 ```
 
 A package that requires `xgen-pdf` only by name (for example xgen-doc2chunk on
@@ -94,3 +94,7 @@ ruff check xgen_pdf/ tests/
 
 Fixtures under `tests/fixtures/` are generated with this package itself
 (`latin.pdf`, `korean.pdf`) except `encrypted.pdf`.
+
+### 0.1.3 security dependency update
+
+Pillow is pinned to 13.0.0 to include upstream image decoder and encoder security fixes. The PDF/image API and Python 3.12 minimum remain compatible. Consumers that pin xgen-pdf must update to 0.1.3 together with Pillow 13.0.0.
